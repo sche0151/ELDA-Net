@@ -1,0 +1,125 @@
+# ============================================================
+# ELDA-Net Configuration
+# Values from thesis Table 3.1 and Section 5.2.2
+# ============================================================
+
+# ── Dataset ─────────────────────────────────────────────────
+dataset: TuSimple          # TuSimple | CULane
+
+tusimple:
+  image_dir: data/tusimple/images
+  label_dir: data/tusimple/labels
+
+culane:
+  image_dir: data/culane/images
+  label_dir: data/culane/labels
+
+# ── Model ───────────────────────────────────────────────────
+# Input resolution: 256×512 (H×W) — thesis Section 3.2
+input_size: [256, 512]     # [height, width]
+in_channels: 3
+out_channels: 1
+
+# ImageNet normalization — thesis Section 3.2
+normalize:
+  mean: [0.485, 0.456, 0.406]
+  std:  [0.229, 0.224, 0.225]
+
+# ── Training ────────────────────────────────────────────────
+device: cuda               # cuda | cpu
+batch_size: 16             # thesis Table 3.1
+num_epochs: 50             # thesis Table 3.1
+num_workers: 8             # thesis Section 5.2.2
+pin_memory: true
+
+# Optimizer — thesis Section 2.2.3
+optimizer:
+  type: Adam
+  lr: 0.001                # η₀ = 10⁻³
+  betas: [0.9, 0.999]
+  weight_decay: 0.0001
+
+# LR Scheduler: cosine annealing with warm restarts — thesis Table 3.1
+scheduler:
+  type: CosineAnnealingWarmRestarts
+  T_max: 25                # warm restart every 25 epochs
+  eta_min: 0.00001         # η_min = 10⁻⁵
+
+# Dropout — thesis Section 3.7 (p = 0.2)
+dropout: 0.2
+
+# ── Loss weights — thesis Equations 8–11 ────────────────────
+loss:
+  lambda_bce:  0.5         # BCE component of seg loss
+  lambda_dice: 0.5         # Dice component of seg loss
+  lambda_conf: 0.3         # confidence head weight
+  lambda_poly: 0.2         # polynomial regression head weight
+
+# ── Classical Preprocessing — thesis Chapter 3 ──────────────
+preprocessing:
+  # Gaussian noise reduction — Section 3.3.2
+  gaussian_kernel: 5       # 5×5 kernel
+  gaussian_sigma: 1.0      # σ=1.0
+
+  # Canny edge detection — Section 3.4
+  canny_low:  50
+  canny_high: 150
+
+  # ROI vertices for 256×512 — Section 3.4
+  # Format: [x, y] in (width, height) pixel coords
+  roi_vertices:
+    - [0,   256]           # bottom-left
+    - [512, 256]           # bottom-right
+    - [340, 140]           # top-right
+    - [172, 140]           # top-left
+
+  # Hough Transform — Section 3.5
+  hough_rho: 1
+  hough_theta_deg: 1.0
+  hough_threshold: 20
+  hough_min_line_length: 40
+  hough_max_line_gap: 20
+
+  # HSV color filter (white/yellow lanes) — Section 3.3
+  hsv_white_lower: [0,   0,   200]
+  hsv_white_upper: [180, 30,  255]
+  hsv_yellow_lower: [15,  80,  80]
+  hsv_yellow_upper: [40,  255, 255]
+
+# ── Morphological Post-Processing — thesis Section 3.7 ───────
+morphology:
+  kernel_size: 5           # 5×5 elliptical SE for closing
+  min_component_area: 500  # connected-component filter (px)
+
+# ── ALEM — thesis Chapter 4 ─────────────────────────────────
+alem:
+  confidence_threshold: 0.70     # C_min = 0.7 (Section 1.4)
+  smoothing_alpha: 0.3           # EMA α = 0.3 (Section 1.4)
+  temporal_buffer_size: 10       # 10-frame buffer (Section 1.4)
+  min_poly_points: 15            # min lane points for poly fit
+  min_poly_span: 0.30            # min span fraction of lane
+  lambda_decay: 2.5              # confidence decay constant (Eq. 15)
+
+  # Kalman filter — thesis Section 4.5
+  kalman:
+    process_noise_cov: 1.0e-4    # Q diagonal scale
+    measurement_noise_cov: 1.0e-2 # R diagonal scale
+
+# ── Augmentation — thesis Section 2.6 ───────────────────────
+augmentation:
+  horizontal_flip: 0.5
+  brightness_contrast: 0.4
+  gaussian_blur: 0.3
+  motion_blur: 0.3
+  synthetic_rain: 0.3
+  synthetic_fog: 0.2
+  nighttime_gamma: 0.3
+  random_erasing: 0.2
+  elastic_distortion: 0.2
+  grid_distortion: 0.15
+  perspective_transform: 0.3
+  hsv_jitter: 0.4
+
+# ── Paths ────────────────────────────────────────────────────
+model_save_path: checkpoints/elda_net.pth
+results_dir: results/
