@@ -4,7 +4,7 @@
 # ============================================================
 
 # ── Dataset ─────────────────────────────────────────────────
-dataset: TuSimple          # TuSimple | CULane
+dataset: CULane          # TuSimple | CULane
 
 tusimple:
   image_dir: data/tusimple/images
@@ -27,7 +27,7 @@ normalize:
 
 # ── Training ────────────────────────────────────────────────
 device: cuda               # cuda | cpu
-batch_size: 16             # thesis Table 3.1
+batch_size: 1             # thesis Table 3.1
 num_epochs: 50             # thesis Table 3.1
 num_workers: 8             # thesis Section 5.2.2
 pin_memory: true
