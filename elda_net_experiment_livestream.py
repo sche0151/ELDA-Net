@@ -10,6 +10,7 @@ Usage:
   python elda_net_experiment.py --mode infer   --video demo.mp4 --output results/out.mp4
 """
 
+import time
 import os
 import cv2
 import sys
@@ -214,6 +215,8 @@ def infer_on_video(video_path: str, output_path: str):
     writer = None
 
     frame_count = 0
+    prev_time = time.time()
+    fps_smooth = 0.0
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -244,6 +247,35 @@ def infer_on_video(video_path: str, output_path: str):
         overlay = overlay_lanes(frame, refined_display,
                                 confidence=confidence,
                                 conf_threshold=conf_threshold)
+        
+        ## Added code here to display FPS ------------------------- 
+        # Calculate FPS
+        now = time.time()
+        fps = 1.0 / (now - prev_time)
+        prev_time = now
+
+        # Smooth FPS so it does not jump too much
+        fps_smooth = 0.9 * fps_smooth + 0.1 * fps if fps_smooth > 0 else fps
+
+        # Draw FPS on frame
+        cv2.putText(
+            overlay,
+            f"FPS: {fps_smooth:.1f}",
+            (20, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.0,
+            (0, 255, 0),
+            2,
+            cv2.LINE_AA
+        )
+
+        # Show live output window
+        cv2.imshow("ELDA-Net Real-Time Inference", overlay)
+
+        # Press q to quit early
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+        ## Added code to display FPS ends here -------------------------
 
         if writer is None:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -253,6 +285,8 @@ def infer_on_video(video_path: str, output_path: str):
         frame_count += 1
 
     cap.release()
+    cv2.destroyAllWindows()
+    
     if writer:
         writer.release()
     print(f"[INFO] Processed {frame_count} frames -> {output_path}")
