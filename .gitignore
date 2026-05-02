@@ -11,6 +11,7 @@ __pycache__/
 env/
 venv/
 eldanet/
+venv-eldanet311/
 video_example/
 
 # Dataset and checkpoint directories
