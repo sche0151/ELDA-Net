@@ -16,9 +16,9 @@ video_example/
 
 # Dataset and checkpoint directories
 data/
-checkpoints/
+# checkpoints/
 results/
-*.pth
+# *.pth
 
 # System files
 .DS_Store
