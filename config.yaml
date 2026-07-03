@@ -86,7 +86,7 @@ preprocessing:
   hsv_yellow_lower: [15,  80,  80]
   hsv_yellow_upper: [40,  255, 255]
 
-# ── Morphological Post-Processing — thesis Section 3.7 ───────
+# ── Morphological Post-Processing — thesis Section 3.7 ──────
 morphology:
   kernel_size: 5           # 5×5 elliptical SE for closing
   min_component_area: 500  # connected-component filter (px)
